@@ -6,17 +6,19 @@ interface MainContract {
     data class UiState(
         val isLoading: Boolean = false,
         val showDialog: Boolean = false,
+        val driverLocation: LatLng? = null,
         val customerLocation: LatLng? = null,
-        val requestLoadingDialog: Boolean = false,
-        val openMap: Boolean = false,
-        val actionType: String = "",
+        val receiveOrderDialog: Boolean = false,
+        val canceledOrderDialog: Boolean = false,
         val userName: String = "",
         val isConnected: Boolean = false,
         val routePoints: List<List<LatLng>> = emptyList()
     )
 
     sealed interface UiAction {
-        data object OnRequestOrderClicked : UiAction
+        data object OnAcceptOrderClicked : UiAction
+        data object OnRejectOrderClicked : UiAction
+        data object OnDismissCanceledDialog : UiAction
     }
 
     sealed interface SideEffect {

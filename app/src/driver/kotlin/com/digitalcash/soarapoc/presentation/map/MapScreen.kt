@@ -19,14 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.digitalcash.googlemap.core.helper.Permission
 import com.digitalcash.soarapoc.R
-import com.digitalcash.soarapoc.core.ui_component.AppButton
 import com.digitalcash.soarapoc.core.ui_component.CustomBaseDialog
 import com.digitalcash.soarapoc.presentation.controller.contract.MainContract
 import com.digitalcash.soarapoc.presentation.controller.vm.MainViewModel
@@ -46,25 +44,26 @@ fun MapScreen() {
     val viewModel = hiltViewModel<MainViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val userMarkerIcon = bitmapDescriptor(context, R.drawable.vector__4_)
+    val driverMarkerIcon = bitmapDescriptor(context, R.drawable.car_svgrepo_com)
+    val customerMarker = bitmapDescriptor(context, R.drawable.home_color_icon)
 
     var cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(
-                state.customerLocation ?: LatLng(
-                    32.5556,
-                    35.85
+                state.driverLocation ?: LatLng(
+                    0.0,
+                    0.0
                 ), 16f
             )
         }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Permission(permission = Manifest.permission.ACCESS_FINE_LOCATION) {
-            LaunchedEffect(state.customerLocation == null) {
+            LaunchedEffect(state.driverLocation == null) {
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(
-                    state.customerLocation ?: LatLng(
-                        32.5556,
-                        35.85
+                    state.driverLocation ?: LatLng(
+                        0.0,
+                        0.0
                     ), 16f
                 )
             }
@@ -80,19 +79,19 @@ fun MapScreen() {
                 ) {
                     state.customerLocation?.let {
                         Marker(
-                            title = "Origin",
-                            state = MarkerState(position = it), icon = userMarkerIcon
+                            title = "Customer",
+                            state = MarkerState(position = it), icon = customerMarker
                         )
 
                     }
 
-                    Marker(
-                        title = "Destination",
-                        state = MarkerState(position = LatLng(31.9539, 35.9106)),
-                        icon = BitmapDescriptorFactory.defaultMarker(
-                            BitmapDescriptorFactory.HUE_BLUE
+                    state.driverLocation?.let {
+                        Marker(
+                            title = "Driver",
+                            state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+                            icon = driverMarkerIcon
                         )
-                    )
+                    }
 
                     if (state.routePoints.isNotEmpty()) {
                         state.routePoints.forEach {
@@ -100,13 +99,13 @@ fun MapScreen() {
                         }
                     }
                 }
-                if (state.requestLoadingDialog) {
+                if (state.receiveOrderDialog) {
                     CustomBaseDialog(
-                        title = "Order Request",
-                        isLoadingDialog = true,
+                        title = "New Order",
+                        isLoadingDialog = false,
                         message = {
                             Text(
-                                text = "Waiting Driver To Accept You Request",
+                                text = "You Received New Order",
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     lineHeight = 27.sp,
@@ -114,6 +113,29 @@ fun MapScreen() {
                                 ),
                             )
                         },
+                        onPositiveCallback = { viewModel.onEvent(MainContract.UiAction.OnAcceptOrderClicked) },
+                        positiveButton = "Accept",
+                        negativeButton = R.string.reject,
+                        onNegativeCallback = { viewModel.onEvent(MainContract.UiAction.OnRejectOrderClicked) }
+                    )
+                }
+
+                if (state.canceledOrderDialog) {
+                    CustomBaseDialog(
+                        title = "New Order",
+                        isLoadingDialog = false,
+                        message = {
+                            Text(
+                                text = "You Received New Order",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 27.sp,
+                                    textAlign = TextAlign.Center,
+                                ),
+                            )
+                        },
+                        negativeButton = R.string.ok,
+                        onNegativeCallback = { viewModel.onEvent(MainContract.UiAction.OnDismissCanceledDialog) }
                     )
                 }
 
@@ -122,15 +144,15 @@ fun MapScreen() {
                 }
 
 
-                AppButton(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .align(Alignment.BottomCenter),
-                    title = "Request Order",
-                    enabled = !state.isLoading,
-                    enableButtonColor = Color.Blue,
-                    isLoading = state.isLoading,
-                    onClick = { viewModel.onEvent(MainContract.UiAction.OnRequestOrderClicked) })
+//                AppButton(
+//                    modifier = Modifier
+//                        .padding(10.dp)
+//                        .align(Alignment.BottomCenter),
+//                    title = "Request Order",
+//                    enabled = !state.isLoading,
+//                    enableButtonColor = Color.Blue,
+//                    isLoading = state.isLoading,
+//                    onClick = { viewModel.onEvent(MainContract.UiAction.OnAcceptOrderClicked) })
             }
         }
     }

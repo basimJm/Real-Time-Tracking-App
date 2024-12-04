@@ -16,6 +16,7 @@ import com.digitalcash.soarapoc.presentation.controller.contract.MainContract.Ui
 import com.digitalcash.soarapoc.presentation.controller.contract.MainContract.UiState
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -62,7 +63,7 @@ class MainViewModel @Inject constructor(
                         updateState {
                             copy(
                                 isLoading = false,
-                                customerLocation = LatLng(response.data.lat, response.data.lng)
+                                driverLocation = LatLng(32.0728, 36.0870)
                             )
                         }
                     }
@@ -73,9 +74,34 @@ class MainViewModel @Inject constructor(
 
     override fun onEvent(event: UiAction) {
         when (event) {
-            UiAction.OnRequestOrderClicked -> {
+            UiAction.OnAcceptOrderClicked -> {
                 Log.d("webSocketLogger", "sendEvent : clicked")
-                sendEvent()
+                acceptOrder()
+            }
+
+            UiAction.OnRejectOrderClicked -> rejectOrder()
+            UiAction.OnDismissCanceledDialog -> updateState { copy(canceledOrderDialog = false) }
+        }
+    }
+
+    private fun rejectOrder() {
+        viewModelScope.launch {
+            uiState.value.driverLocation.let {
+                Log.d("webSocketLogger", "sendEvent : clicked")
+                val eventBody = Event(
+                    role = "driver",
+                    actionType = ActionType.REJECT_ORDER.action,
+                    userName = "bazzsim",
+                    //replace it with real driver start destination
+                    lat = 32.0728,
+                    long = 36.0870
+                )
+                webSocketRepository.sendEvent(eventBody)
+                updateState {
+                    copy(
+                        receiveOrderDialog = false,
+                    )
+                }
             }
         }
     }
@@ -110,23 +136,59 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun sendEvent() {
+    private fun acceptOrder() {
         viewModelScope.launch {
-            Log.d("webSocketLogger", "sendEvent : clicked")
-            val eventBody = Event(
-                role = "driver",
-                actionType = ActionType.ACCEPT_ORDER.action,
-                userName = "bazzsim",
-                lat = 32.5556,
-                long = 35.85
-            )
-            webSocketRepository.sendEvent(eventBody)
-            updateState {
-                copy(
-                    requestLoadingDialog = true,
+            uiState.value.driverLocation.let {
+                Log.d("webSocketLogger", "sendEvent : clicked")
+                val eventBody = Event(
+                    role = "driver",
+                    actionType = ActionType.ACCEPT_ORDER.action,
+                    userName = "bazzsim",
+                    //replace it with real driver start destination
+                    lat = 32.0728,
+                    long = 36.0870
                 )
+                webSocketRepository.sendEvent(eventBody)
+                updateState {
+                    copy(
+                        receiveOrderDialog = false,
+                    )
+                }
+                uiState.value.driverLocation?.let {
+                    getDirections(
+                        it,
+                        LatLng(
+                            uiState.value.customerLocation?.latitude ?: 0.0,
+                            uiState.value.customerLocation?.longitude ?: 0.0
+                        )
+                    )
+                }
+
+                delay(2000)
+                startNavigation()
             }
-            receiveEvent()
+        }
+    }
+
+    private fun startNavigation() {
+        viewModelScope.launch {
+            if (uiState.value.routePoints.isNotEmpty()) {
+                uiState.value.routePoints.forEach { first ->
+                    first.forEach {
+                        val eventBody = Event(
+                            role = "driver",
+                            actionType = ActionType.NAVIGATION.action,
+                            userName = "bazzsim",
+                            //replace it with real driver start destination
+                            lat = it.latitude,
+                            long = it.longitude
+                        )
+                        delay(1000)
+                        webSocketRepository.sendEvent(eventBody)
+                        updateState { copy(driverLocation = LatLng(it.latitude, it.longitude)) }
+                    }
+                }
+            }
         }
     }
 
@@ -134,17 +196,17 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             webSocketRepository.receiveEvent().collectLatest { event ->
                 when (event.actionType) {
-                    ActionType.ACCEPT_ORDER.action -> {
+                    ActionType.REQUEST_ORDER.action -> {
                         updateState {
                             copy(
-                                requestLoadingDialog = false,
-                                actionType = event.actionType
+                                receiveOrderDialog = true,
+                                customerLocation = LatLng(event.lat, event.long)
                             )
                         }
-                        uiState.value.customerLocation?.let {
-                            getDirections(LatLng(32.5556, 35.85), it)
-                        }
+                    }
 
+                    ActionType.CANCEL_ORDER.action -> {
+                        updateState { copy(receiveOrderDialog = false, canceledOrderDialog = true) }
                     }
                 }
             }
