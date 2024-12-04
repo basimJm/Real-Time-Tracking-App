@@ -47,7 +47,7 @@ fun MapScreen() {
     val viewModel = hiltViewModel<MainViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val driverMarker = bitmapDescriptor(context, R.drawable.vector__4_)
+    val driverMarker = bitmapDescriptor(context, R.drawable.car_svgrepo_com)
     val customerMarker = bitmapDescriptor(context, R.drawable.home_color_icon)
 
     val cameraPositionState =

@@ -154,7 +154,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             webSocketRepository.receiveEvent().collectLatest { event ->
                 when (event.actionType) {
-                    ActionType.ACCEPT_ORDER.action, ActionType.NAVIGATION.action -> {
+                    ActionType.ACCEPT_ORDER.action -> {
                         updateState {
                             copy(
                                 showRequestLoadingDialog = false,
