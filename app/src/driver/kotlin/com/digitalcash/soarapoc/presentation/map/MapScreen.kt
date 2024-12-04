@@ -47,7 +47,7 @@ fun MapScreen() {
     val driverMarkerIcon = bitmapDescriptor(context, R.drawable.car_svgrepo_com)
     val customerMarker = bitmapDescriptor(context, R.drawable.home_color_icon)
 
-    var cameraPositionState =
+    val cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(
                 state.driverLocation ?: LatLng(
