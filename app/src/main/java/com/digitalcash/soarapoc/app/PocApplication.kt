@@ -1,4 +1,4 @@
-package com.digitalcash.soarapoc.presentation.app
+package com.digitalcash.soarapoc.app
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

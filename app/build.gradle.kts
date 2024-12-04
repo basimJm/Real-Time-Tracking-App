@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -22,6 +24,24 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        flavorDimensions.add("role")
+
+        productFlavors {
+            create("customer") {
+                dimension = "role"
+            }
+            create("driver") {
+                dimension = "role"
+            }
+        }
+
+        val properties = Properties()
+        properties.load(rootProject.file("local.properties").inputStream())
+        val mapsApiKey = properties.getProperty("MAPS_API_KEY") ?: ""
+        val mapsApiBaseUrl = properties.getProperty("MAPS_API_BASE_URL") ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
+        buildConfigField("String", "MAPS_API_BASE_URL", "\"$mapsApiBaseUrl\"")
     }
 
     buildTypes {
@@ -42,6 +62,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"

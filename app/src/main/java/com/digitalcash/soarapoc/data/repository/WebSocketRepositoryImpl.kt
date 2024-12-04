@@ -22,7 +22,7 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
     override suspend fun initSocket(userName: String): Boolean {
         val request =
             Request.Builder()
-                .url("ws://10.0.2.2:8022/tracking-socket?username=$userName")
+                .url("ws://192.168.101.95:8022/tracking-socket?username=$userName")
                 .build()
 
         try {
@@ -42,6 +42,16 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                     Log.d("webSocketLogger", "onFailure : ${t}")
                 }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                    super.onClosed(webSocket, code, reason)
+                    Log.d("webSocketLogger", "closed")
+                }
+
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    super.onClosing(webSocket, code, reason)
+                    Log.d("webSocketLogger", "closing")
+                }
             })
 
             return true
@@ -52,14 +62,13 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
 
     override suspend fun sendEvent(event: Event) {
         try {
-            webSocket?.send(event.toString()) ?: Log.d(
-                "webSocketLogger",
-                "Web Socket Is Not Connected"
-            )
+            val eventJson = Json.encodeToString(Event.serializer(), event)
+            webSocket?.send(eventJson) ?: Log.d("webSocketLogger", "WebSocket is not connected")
         } catch (e: Exception) {
-            Log.d("webSocketLogger", "sendEvent : ${e.printStackTrace()}")
+            Log.d("webSocketLogger", "sendEvent failed: ${e.message}")
         }
     }
+
 
     override suspend fun receiveEvent(): Flow<Event> {
         return eventChannel.receiveAsFlow()
