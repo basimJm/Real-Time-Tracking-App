@@ -3,7 +3,6 @@ package com.digitalcash.soarapoc.core.ui_component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -67,63 +66,61 @@ fun CustomBaseDialog(
                 .fillMaxWidth()
                 .clip(shape = RoundedCornerShape(22.dp)),
         ) {
-            if (isLoadingDialog) {
-                Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(
-                            22.dp,
-                        ),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(
+                        22.dp,
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
 
-                    onCloseCallback?.let {
-                        Icon(
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .size(16.dp)
-                                .clickable { it() },
-                            painter = painterResource(id = R.drawable.ic_close),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            contentDescription = "Close Dialog",
-                        )
-                    }
-
-                    iconResource?.let {
-                        Image(
-                            modifier = Modifier.size(80.dp),
-                            painter = painterResource(id = iconResource),
-                            contentDescription = "",
-                        )
-                    }
-
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            textAlign = TextAlign.Center,
-                            lineHeight = 24.sp,
-                            color = titleColor,
-                        ),
+                onCloseCallback?.let {
+                    Icon(
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .size(16.dp)
+                            .clickable { it() },
+                        painter = painterResource(id = R.drawable.ic_close),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        contentDescription = "Close Dialog",
                     )
+                }
 
-                    message?.let {
-                        it()
+                iconResource?.let {
+                    Image(
+                        modifier = Modifier.size(80.dp),
+                        painter = painterResource(id = iconResource),
+                        contentDescription = "",
+                    )
+                }
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        textAlign = TextAlign.Center,
+                        lineHeight = 24.sp,
+                        color = titleColor,
+                    ),
+                )
+
+                message?.let {
+                    it()
+                }
+
+
+                Column(
+                    Modifier.padding(vertical = 30.dp),
+                    verticalArrangement = Arrangement.spacedBy(
+                        16.dp,
+                    ),
+                ) {
+                    if (isLoadingDialog) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
-
-
-                    Column(
-                        Modifier.padding(vertical = 30.dp),
-                        verticalArrangement = Arrangement.spacedBy(
-                            16.dp,
-                        ),
-                    ) {
                         positiveButton?.let {
                             AppButton(
                                 modifier = Modifier
@@ -136,14 +133,14 @@ fun CustomBaseDialog(
                             }
                         }
 
-                        negativeButton?.let {
-                            AppSecondaryButton(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                title = stringResource(id = negativeButton),
-                            ) {
-                                onNegativeCallback()
-                            }
+
+                    negativeButton?.let {
+                        AppSecondaryButton(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            title = stringResource(id = negativeButton),
+                        ) {
+                            onNegativeCallback()
                         }
                     }
                 }

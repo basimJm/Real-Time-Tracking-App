@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,14 +47,15 @@ fun MapScreen() {
     val viewModel = hiltViewModel<MainViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val userMarkerIcon = bitmapDescriptor(context, R.drawable.vector__4_)
+    val driverMarker = bitmapDescriptor(context, R.drawable.vector__4_)
+    val customerMarker = bitmapDescriptor(context, R.drawable.home_color_icon)
 
-    var cameraPositionState =
+    val cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(
                 state.customerLocation ?: LatLng(
-                    32.5556,
-                    35.85
+                    0.0,
+                    0.0
                 ), 16f
             )
         }
@@ -63,8 +65,8 @@ fun MapScreen() {
             LaunchedEffect(state.customerLocation == null) {
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(
                     state.customerLocation ?: LatLng(
-                        32.5556,
-                        35.85
+                        0.0,
+                        0.0
                     ), 16f
                 )
             }
@@ -81,18 +83,17 @@ fun MapScreen() {
                     state.customerLocation?.let {
                         Marker(
                             title = "Origin",
-                            state = MarkerState(position = it), icon = userMarkerIcon
+                            state = MarkerState(position = it),
+                            icon = customerMarker
                         )
-
                     }
-
-                    Marker(
-                        title = "Destination",
-                        state = MarkerState(position = LatLng(31.9539, 35.9106)),
-                        icon = BitmapDescriptorFactory.defaultMarker(
-                            BitmapDescriptorFactory.HUE_BLUE
+                    state.driverLocationLocation?.let {
+                        Marker(
+                            title = "Destination",
+                            state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+                            icon = driverMarker
                         )
-                    )
+                    }
 
                     if (state.routePoints.isNotEmpty()) {
                         state.routePoints.forEach {
@@ -100,7 +101,7 @@ fun MapScreen() {
                         }
                     }
                 }
-                if (state.requestLoadingDialog) {
+                if (state.showRequestLoadingDialog) {
                     CustomBaseDialog(
                         title = "Order Request",
                         isLoadingDialog = true,
@@ -114,6 +115,28 @@ fun MapScreen() {
                                 ),
                             )
                         },
+                        onPositiveCallback = { viewModel.onEvent(MainContract.UiAction.OnCancelOrderClicked) },
+                        positiveButton = stringResource(id = R.string.cancel_order),
+                        positiveButtonColor = Color.Red
+                    )
+                }
+
+                if (state.showRejectedDialog) {
+                    CustomBaseDialog(
+                        title = "Order Rejected",
+                        isLoadingDialog = false,
+                        message = {
+                            Text(
+                                text = "Your Order Has Been Rejected By Driver",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 27.sp,
+                                    textAlign = TextAlign.Center,
+                                ),
+                            )
+                        },
+                        onPositiveCallback = { viewModel.onEvent(MainContract.UiAction.OnDismissRejectedDialogClicked) },
+                        positiveButton = stringResource(id = R.string.ok)
                     )
                 }
 

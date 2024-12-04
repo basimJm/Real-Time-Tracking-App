@@ -58,7 +58,6 @@ class MainViewModel @Inject constructor(
                     }
 
                     is ResponseState.Success -> {
-                        Log.d("webSocketLogger", "Location Success : ${response.data}")
                         updateState {
                             copy(
                                 isLoading = false,
@@ -73,10 +72,11 @@ class MainViewModel @Inject constructor(
 
     override fun onEvent(event: UiAction) {
         when (event) {
-            UiAction.OnRequestOrderClicked -> {
-                Log.d("webSocketLogger", "sendEvent : clicked")
-                sendEvent()
-            }
+            UiAction.OnRequestOrderClicked -> requestOrder()
+
+            UiAction.OnCancelOrderClicked -> cancelOrder()
+
+            UiAction.OnDismissRejectedDialogClicked -> updateState { copy(showRejectedDialog = false) }
         }
     }
 
@@ -110,23 +110,43 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun sendEvent() {
+    private fun requestOrder() {
         viewModelScope.launch {
-            Log.d("webSocketLogger", "sendEvent : clicked")
-            val eventBody = Event(
-                role = "customer",
-                actionType = ActionType.REQUEST_ORDER.action,
-                userName = "basim",
-                lat = 32.5556,
-                long = 35.85
-            )
-            webSocketRepository.sendEvent(eventBody)
-            updateState {
-                copy(
-                    requestLoadingDialog = true,
+            uiState.value.customerLocation?.let {
+                val eventBody = Event(
+                    role = "customer",
+                    actionType = ActionType.REQUEST_ORDER.action,
+                    userName = "basim",
+                    lat = it.latitude,
+                    long = it.longitude
                 )
+                webSocketRepository.sendEvent(eventBody)
+                updateState {
+                    copy(
+                        showRequestLoadingDialog = true,
+                    )
+                }
             }
-            receiveEvent()
+        }
+    }
+
+    private fun cancelOrder() {
+        viewModelScope.launch {
+            uiState.value.customerLocation?.let {
+                val eventBody = Event(
+                    role = "customer",
+                    actionType = ActionType.CANCEL_ORDER.action,
+                    userName = "basim",
+                    lat = it.latitude,
+                    long = it.longitude
+                )
+                webSocketRepository.sendEvent(eventBody)
+                updateState {
+                    copy(
+                        showRequestLoadingDialog = false,
+                    )
+                }
+            }
         }
     }
 
@@ -134,17 +154,30 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             webSocketRepository.receiveEvent().collectLatest { event ->
                 when (event.actionType) {
-                    ActionType.ACCEPT_ORDER.action -> {
+                    ActionType.ACCEPT_ORDER.action, ActionType.NAVIGATION.action -> {
                         updateState {
                             copy(
-                                requestLoadingDialog = false,
-                                actionType = event.actionType
+                                showRequestLoadingDialog = false,
+                                driverLocationLocation = LatLng(event.lat, event.long)
                             )
                         }
-                        uiState.value.customerLocation?.let {
-                            getDirections(LatLng(32.5556, 35.85), it)
-                        }
 
+                        uiState.value.customerLocation?.let {
+                            getDirections(LatLng(event.lat, event.long), it)
+                        }
+                    }
+
+                    ActionType.REJECT_ORDER.action -> {
+                        updateState {
+                            copy(
+                                showRequestLoadingDialog = false,
+                                showRejectedDialog = true
+                            )
+                        }
+                    }
+
+                    ActionType.NAVIGATION.action -> {
+                        updateState { copy(driverLocationLocation = LatLng(event.lat, event.long)) }
                     }
                 }
             }

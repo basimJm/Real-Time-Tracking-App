@@ -30,7 +30,7 @@ class MainViewModel @Inject constructor(
     init {
         getCurrentLocation()
         viewModelScope.launch {
-            val isConnected = webSocketRepository.initSocket("basim")
+            val isConnected = webSocketRepository.initSocket("driver")
             updateState {
                 copy(
                     isConnected = isConnected
@@ -114,9 +114,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("webSocketLogger", "sendEvent : clicked")
             val eventBody = Event(
-                role = "customer",
-                actionType = ActionType.REQUEST_ORDER.action,
-                userName = "basim",
+                role = "driver",
+                actionType = ActionType.ACCEPT_ORDER.action,
+                userName = "bazzsim",
                 lat = 32.5556,
                 long = 35.85
             )

@@ -22,7 +22,7 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
     override suspend fun initSocket(userName: String): Boolean {
         val request =
             Request.Builder()
-                .url("ws://10.0.2.2:8022/tracking-socket?username=$userName")
+                .url("ws://192.168.101.95:8022/tracking-socket?username=$userName")
                 .build()
 
         try {
