@@ -5,6 +5,9 @@ import com.digitalcash.soarapoc.domain.entity.Event
 import com.digitalcash.soarapoc.domain.repository.WebSocketRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -19,6 +22,8 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
     private var webSocket: WebSocket? = null
     private val eventChannel = Channel<Event>()
 
+    private val _drivers = MutableStateFlow<Event?>(null)
+
     override suspend fun initSocket(userName: String): Boolean {
         val request =
             Request.Builder()
@@ -31,7 +36,6 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
                     val event = Json.decodeFromString<Event>(text)
                     Log.d("webSocketLogger", "onMessage : $event")
                     eventChannel.trySend(event)
-
                 }
 
                 override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -69,7 +73,6 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
         }
     }
 
-
     override suspend fun receiveEvent(): Flow<Event> {
         return eventChannel.receiveAsFlow()
     }
@@ -78,5 +81,4 @@ class WebSocketRepositoryImpl @Inject constructor(private val httpClient: OkHttp
         webSocket?.close(1000, "Client Disconnect")
         eventChannel.close()
     }
-
 }

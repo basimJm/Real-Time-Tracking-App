@@ -19,7 +19,6 @@ interface MainContract {
     sealed interface UiAction {
         data object OnRequestOrderClicked : UiAction
         data object OnCancelOrderClicked : UiAction
-        data object OnDismissRejectedDialogClicked : UiAction
     }
 
     sealed interface SideEffect {

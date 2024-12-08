@@ -76,7 +76,6 @@ class MainViewModel @Inject constructor(
 
             UiAction.OnCancelOrderClicked -> cancelOrder()
 
-            UiAction.OnDismissRejectedDialogClicked -> updateState { copy(showRejectedDialog = false) }
         }
     }
 
@@ -117,6 +116,7 @@ class MainViewModel @Inject constructor(
                     role = "customer",
                     actionType = ActionType.REQUEST_ORDER.action,
                     userName = "basim",
+                    assignedTo = "merchant",
                     lat = it.latitude,
                     long = it.longitude
                 )
@@ -137,6 +137,7 @@ class MainViewModel @Inject constructor(
                     role = "customer",
                     actionType = ActionType.CANCEL_ORDER.action,
                     userName = "basim",
+                    assignedTo = "merchant",
                     lat = it.latitude,
                     long = it.longitude
                 )
@@ -164,15 +165,6 @@ class MainViewModel @Inject constructor(
 
                         uiState.value.customerLocation?.let {
                             getDirections(LatLng(event.lat, event.long), it)
-                        }
-                    }
-
-                    ActionType.REJECT_ORDER.action -> {
-                        updateState {
-                            copy(
-                                showRequestLoadingDialog = false,
-                                showRejectedDialog = true
-                            )
                         }
                     }
 

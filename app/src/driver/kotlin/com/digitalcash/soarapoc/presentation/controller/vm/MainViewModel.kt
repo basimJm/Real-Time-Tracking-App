@@ -31,10 +31,10 @@ class MainViewModel @Inject constructor(
     init {
         getCurrentLocation()
         viewModelScope.launch {
-            val isConnected = webSocketRepository.initSocket("driver")
+            val isConnected = webSocketRepository.initSocket("myDriver")
             updateState {
                 copy(
-                    isConnected = isConnected
+                    isConnected = isConnected, userName = "myDriver"
                 )
             }
         }
@@ -66,11 +66,25 @@ class MainViewModel @Inject constructor(
                                 driverLocation = LatLng(32.0728, 36.0870)
                             )
                         }
+                        webSocketRepository.sendEvent(
+                            Event(
+                                role = "driver",
+                                actionType = ActionType.CONNECT.action,
+                                userName = "myDriver",
+                                assignedTo = "",
+//                                lat = 32.0728,
+//                                long = 36.0870,
+                                lat = 32.0728,
+                                long = 36.0880
+                            )
+                        )
                     }
                 }
             }
         }
     }
+
+
 
     override fun onEvent(event: UiAction) {
         when (event) {
@@ -92,7 +106,7 @@ class MainViewModel @Inject constructor(
                     role = "driver",
                     actionType = ActionType.REJECT_ORDER.action,
                     userName = "bazzsim",
-                    //replace it with real driver start destination
+                    assignedTo = "",
                     lat = 32.0728,
                     long = 36.0870
                 )
@@ -144,7 +158,7 @@ class MainViewModel @Inject constructor(
                     role = "driver",
                     actionType = ActionType.ACCEPT_ORDER.action,
                     userName = "bazzsim",
-                    //replace it with real driver start destination
+                    assignedTo = "",
                     lat = 32.0728,
                     long = 36.0870
                 )
@@ -152,6 +166,7 @@ class MainViewModel @Inject constructor(
                 updateState {
                     copy(
                         receiveOrderDialog = false,
+                        isDriverAvailable = false
                     )
                 }
                 uiState.value.driverLocation?.let {
@@ -179,7 +194,7 @@ class MainViewModel @Inject constructor(
                             role = "driver",
                             actionType = ActionType.NAVIGATION.action,
                             userName = "bazzsim",
-                            //replace it with real driver start destination
+                            assignedTo = "",
                             lat = it.latitude,
                             long = it.longitude
                         )
@@ -196,13 +211,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             webSocketRepository.receiveEvent().collectLatest { event ->
                 when (event.actionType) {
-                    ActionType.REQUEST_ORDER.action -> {
-                        updateState {
-                            copy(
-                                receiveOrderDialog = true,
-                                customerLocation = LatLng(event.lat, event.long)
-                            )
-                        }
+                    ActionType.ASSIGN_ORDER.action -> {
+                        if (event.assignedTo == uiState.value.userName && uiState.value.isDriverAvailable)
+                            updateState {
+                                copy(
+                                    receiveOrderDialog = true,
+                                    customerLocation = LatLng(event.lat, event.long)
+                                )
+                            }
                     }
 
                     ActionType.CANCEL_ORDER.action -> {

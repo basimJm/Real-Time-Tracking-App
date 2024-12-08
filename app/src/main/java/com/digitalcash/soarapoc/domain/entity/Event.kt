@@ -7,6 +7,7 @@ data class Event(
     val role: String,
     val actionType: String,
     val userName: String,
+    val assignedTo:String,
     val lat: Double,
     val long: Double,
 )

@@ -120,25 +120,6 @@ fun MapScreen() {
                     )
                 }
 
-                if (state.canceledOrderDialog) {
-                    CustomBaseDialog(
-                        title = "New Order",
-                        isLoadingDialog = false,
-                        message = {
-                            Text(
-                                text = "You Received New Order",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 27.sp,
-                                    textAlign = TextAlign.Center,
-                                ),
-                            )
-                        },
-                        negativeButton = R.string.ok,
-                        onNegativeCallback = { viewModel.onEvent(MainContract.UiAction.OnDismissCanceledDialog) }
-                    )
-                }
-
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }

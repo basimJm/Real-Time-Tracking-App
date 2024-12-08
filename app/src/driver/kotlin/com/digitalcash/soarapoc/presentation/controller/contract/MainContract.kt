@@ -5,6 +5,7 @@ import com.google.android.gms.maps.model.LatLng
 interface MainContract {
     data class UiState(
         val isLoading: Boolean = false,
+        val isDriverAvailable: Boolean = true,
         val showDialog: Boolean = false,
         val driverLocation: LatLng? = null,
         val customerLocation: LatLng? = null,

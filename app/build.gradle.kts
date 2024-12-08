@@ -34,6 +34,10 @@ android {
             create("driver") {
                 dimension = "role"
             }
+
+            create("merchant") {
+                dimension = "role"
+            }
         }
 
         val properties = Properties()
